@@ -9,7 +9,7 @@ import javax.swing.JFrame;
 public class ShootOut extends JFrame{
 	
 	private final int WIDTH = 1000;
-	private final int HEIGTH = 1000;
+	private final int HEIGTH = 1025;
 	
 	public ShootOut() {
         initUI();
