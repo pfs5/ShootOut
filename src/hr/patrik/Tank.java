@@ -4,6 +4,7 @@ import hr.patrik.Board.DIR;
 
 import java.awt.Image;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 
 import javax.swing.ImageIcon;
 
@@ -21,17 +22,21 @@ public class Tank {
 	private int dyU;
 	private int dyD;
 
+	private int shotsNumber;
+
 	Image image;
 	private DIR direction;
 	private int directionIndex;
 	private int[][] mapMatrix;
+	private ArrayList<Shot> shots;
 
 	//Constants
 	private String COLOUR;
 	private int TANK_SIZE;
-	private int SPEED = 3;
+	private int SPEED = 1;
 	private int EDGE = 7;
 	private int BLOCK_SIZE;
+	private int MAX_SHOTS = 5;
 
 	public Tank (int x, int y, String COLOUR, int [][] mapMatrix, int BLOCK_SIZE) {
 		this.x = x;
@@ -39,6 +44,9 @@ public class Tank {
 		this.COLOUR = COLOUR;
 		this.mapMatrix = mapMatrix;
 		this.BLOCK_SIZE = BLOCK_SIZE;
+
+		shots = new ArrayList<Shot>();
+		shotsNumber=0;
 
 		//Initial settings
 		direction = DIR.N;
@@ -89,6 +97,25 @@ public class Tank {
 		return image;
 	}
 
+	public ArrayList<Shot> getShots () {
+		return shots;
+	}
+
+	public void setShots(ArrayList<Shot> shots) {
+		this.shots = shots;
+	}
+
+	public void shoot () {
+		int shotX = x + (TANK_SIZE + EDGE)/2 -2;
+		int shotY = y + (TANK_SIZE + EDGE)/2 -2;
+
+		if (shotsNumber<MAX_SHOTS) {
+			Shot newShot = new Shot(shotX, shotY, COLOUR, direction, mapMatrix, BLOCK_SIZE);
+			shots.add(newShot);
+			shotsNumber++;
+		}
+	}
+
 	public void move () {
 
 		boolean possible;
@@ -100,6 +127,18 @@ public class Tank {
 			x += (dxR+dxL);
 			y += (dyU+dyD);
 		}
+		
+		checkShots();
+	}
+	
+	public void checkShots() {
+		for (int i=0; i<shots.size(); i++) {
+			Shot current = shots.get(i);
+			if (current.isVisible() == 0) {
+				shots.remove(i);
+				shotsNumber--;
+			}
+		}
 	}
 
 	public boolean checkMove(int newX, int newY) {
@@ -107,7 +146,7 @@ public class Tank {
 		int blockNumber = mapMatrix[0].length;
 		int maxX = blockNumber*BLOCK_SIZE;
 		int maxY = maxX;
-		
+
 		if (newX+EDGE<0 || newX + TANK_SIZE >maxX )
 			return false;
 		if (newY+EDGE<0 || newY + TANK_SIZE>maxY)
@@ -119,7 +158,7 @@ public class Tank {
 				int blockY = j*BLOCK_SIZE;
 
 				if (mapMatrix[i][j] == 1) {
-					
+
 					//top left corner
 					if (newX+EDGE>blockX && newX+EDGE<blockX+BLOCK_SIZE && newY+EDGE>blockY && newY+EDGE<blockY+BLOCK_SIZE)
 						return false;
@@ -190,6 +229,8 @@ public class Tank {
 			break;
 			case KeyEvent.VK_O: incIndex();
 			break;
+			case KeyEvent.VK_ENTER: shoot();
+			break;
 			}
 
 		if (COLOUR.equals("BLUE"))
@@ -205,6 +246,8 @@ public class Tank {
 			case KeyEvent.VK_Q: decIndex();
 			break;
 			case KeyEvent.VK_E: incIndex();
+			break;
+			case KeyEvent.VK_SPACE: shoot();
 			break;
 			}
 	}

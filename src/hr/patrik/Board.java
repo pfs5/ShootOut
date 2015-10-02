@@ -9,6 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 import java.util.Random;
 
 import javax.swing.ImageIcon;
@@ -36,11 +37,13 @@ public class Board extends JPanel implements ActionListener {
 	}
 
 	//Variables
+	private int CLK;
 	private int WIDTH ;
 	private int HEIGTH;
-	private int DELAY = 20;
+	private int DELAY = 5;
 	private int BLOCK_SIZE;
 	private int blockNumber;
+	private int TANK_PERIOD = 2;
 
 	private STATE state;
 
@@ -48,8 +51,11 @@ public class Board extends JPanel implements ActionListener {
 	private int redTankY;
 	private int blueTankX;
 	private int blueTankY;
+	private boolean playable;
 
 	private int[][] mapMatrix;
+	private ArrayList<Shot> redShots;
+	private ArrayList<Shot> blueShots;
 
 	Timer timer;
 	Image blockImage;
@@ -81,40 +87,125 @@ public class Board extends JPanel implements ActionListener {
 	public void initGame() {
 		//Set state
 		state = STATE.GAME;
+		CLK = 0;
 
 		//Initialize map
 		initMap();
 
-		setTankLocation("RED");
-		setTankLocation("BLUE");
+		setTankLocation();
 
 		redTank = new Tank(redTankX, redTankY, "RED", mapMatrix, BLOCK_SIZE);
-		blueTank = new Tank(blueTankX, blueTankX, "BLUE", mapMatrix, BLOCK_SIZE);
+		blueTank = new Tank(blueTankX, blueTankY, "BLUE", mapMatrix, BLOCK_SIZE);
 	}
 
-	public void setTankLocation(String colour) {
+	public void setTankLocation() {
 
-		if (colour.equals("RED"))
-		for (int i=0; i<blockNumber; i++)
-			for (int j=0; j<blockNumber; j++) {
-				if (mapMatrix[i][j] == 0) {
-					redTankX = i*BLOCK_SIZE;
-					redTankY = j*BLOCK_SIZE;
-					return;
+		playable = false;
+
+		while (playable == false) {
+			while (true) {
+				int newX = randomNumber.nextInt(blockNumber); 
+				int newY = randomNumber.nextInt(blockNumber);
+				if (mapMatrix[newX][newY] == 0) {
+					redTankX = newX * BLOCK_SIZE;
+					redTankY = newY * BLOCK_SIZE;
+					break;
 				}
 			}
-		if (colour.equals("BLUE"))
-			for (int i=blockNumber-2;i>0;i--)
-				for (int j=blockNumber-2; j>0; j--) {
-					if (mapMatrix[i][j] == 0) {
-						blueTankX = i*BLOCK_SIZE;
-						blueTankY = j*BLOCK_SIZE;
-						return;
-					}
+			while (true) {
+				int newX = randomNumber.nextInt(blockNumber); 
+				int newY = randomNumber.nextInt(blockNumber);
+				if (mapMatrix[newX][newY] == 0) {
+					blueTankX = newX * BLOCK_SIZE;
+					blueTankY = newY * BLOCK_SIZE;
+					break;
 				}
-		
+			}
+			
+			if (blueTankX<redTankX && blueTankY<redTankY)
+				checkPlayable1(blueTankX/BLOCK_SIZE,blueTankY/BLOCK_SIZE);
+			if (blueTankX>redTankX && blueTankY>redTankY)
+				checkPlayable2(redTankX/BLOCK_SIZE,redTankY/BLOCK_SIZE);
+			if (blueTankX>redTankX && blueTankY<redTankY)
+				checkPlayable3(blueTankX/BLOCK_SIZE,blueTankY/BLOCK_SIZE);
+			if (blueTankX<redTankX && blueTankY>redTankY)
+				checkPlayable4(redTankX/BLOCK_SIZE,redTankY/BLOCK_SIZE);
+		}
+
 	}
 
+	public void checkPlayable1(int x, int y) {
+		System.out.println("1");
+		int matrixSize = mapMatrix[0].length;
+		if (x==matrixSize-1 || y==matrixSize-1)
+			return;
+		
+		if (mapMatrix[x+1][y] == 0)
+			checkPlayable1(x+1, y);
+		if (mapMatrix[x][y+1] == 0)
+			checkPlayable1(x, y+1);
+		int currentX = x*BLOCK_SIZE;
+		int currentY = y*BLOCK_SIZE;
+		if (currentX==redTankX && currentY==redTankY) {
+			playable = true;
+			return;
+		}
+	}
+	
+	public void checkPlayable2(int x, int y) {
+		System.out.println("2");
+		int matrixSize = mapMatrix[0].length;
+		if (x==matrixSize-1 || y==matrixSize-1)
+			return;
+		
+		if (mapMatrix[x+1][y] == 0)
+			checkPlayable2(x+1, y);
+		if (mapMatrix[x][y+1] == 0)
+			checkPlayable2(x, y+1);
+		int currentX = x*BLOCK_SIZE;
+		int currentY = y*BLOCK_SIZE;
+		if (currentX==blueTankX && currentY==blueTankY) {
+			playable = true;
+			return;
+		}
+	}
+	
+	public void checkPlayable3(int x, int y) {
+		System.out.println("3");
+		int matrixSize = mapMatrix[0].length;
+		if (x==0 || y==matrixSize-1)
+			return;
+		
+		if (mapMatrix[x-1][y] == 0)
+			checkPlayable3(x-1, y);
+		if (mapMatrix[x][y+1] == 0)
+			checkPlayable3(x, y+1);
+		int currentX = x*BLOCK_SIZE;
+		int currentY = y*BLOCK_SIZE;
+		if (currentX==redTankX && currentY==redTankY) {
+			playable = true;
+			return;
+		}
+	}
+	
+	public void checkPlayable4(int x, int y) {
+		System.out.println("4");
+		int matrixSize = mapMatrix[0].length;
+		if (x==0 || y==matrixSize-1)
+			return;
+		
+		if (mapMatrix[x-1][y] == 0)
+			checkPlayable4(x-1, y);
+		if (mapMatrix[x][y+1] == 0)
+			checkPlayable4(x, y+1);
+		int currentX = x*BLOCK_SIZE;
+		int currentY = y*BLOCK_SIZE;
+		if (currentX==blueTankX && currentY==blueTankY) {
+			playable = true;
+			return;
+		}
+	}
+	
 	public void initMap() {
 		//Block image
 		String path = "/resource/block.png";
@@ -158,6 +249,15 @@ public class Board extends JPanel implements ActionListener {
 					g2d.drawImage(blockImage, blockX, blockY, this);
 			}
 
+		//Draw shots
+		redShots = redTank.getShots();
+		blueShots = blueTank.getShots();
+
+		for (Shot current : redShots)
+			g2d.drawImage (current.getImage(), current.getX(), current.getY(), this);
+		for (Shot current : blueShots)
+			g2d.drawImage (current.getImage(), current.getX(), current.getY(), this);
+
 		//Draw tanks
 		Image redTankImage = redTank.getImage();
 		Image blueTankImage = blueTank.getImage();
@@ -175,9 +275,22 @@ public class Board extends JPanel implements ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent e) {
 
+		CLK++;
+
 		//Move tanks
-		redTank.move();
-		blueTank.move();
+		if (CLK % TANK_PERIOD == 0) {
+			redTank.move();
+			blueTank.move();
+		}
+
+		//Move shots
+		redShots = redTank.getShots();
+		blueShots = blueTank.getShots();
+
+		for (Shot current : redShots)
+			current.move();
+		for (Shot current : blueShots)
+			current.move();
 
 		repaint();
 	}
